@@ -4,11 +4,15 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 export const typeOrmAsyncModuleOptions = {
   useFactory: async (): Promise<TypeOrmModuleOptions> => ({
     namingStrategy: new SnakeNamingStrategy(),
-    type: 'sqlite',
+    type: 'postgres',
+    host: 'localhost',
+    port: 5432,
+    username: process.env.USERNAME,
+    password: process.env.PASSWORD,
+    database: process.env.DATABASE,
     entities: [__dirname + '/../**/*.entity.{js,ts}'],
-    database: 'database.db',
     synchronize: process.env.MODE == 'dev', //! set 'false' in production
-    autoLoadEntities: true,
-    logging: process.env.MODE == 'dev',
+    // autoLoadEntities: true,
+    // logging: process.env.MODE == 'dev',
   }),
 };
