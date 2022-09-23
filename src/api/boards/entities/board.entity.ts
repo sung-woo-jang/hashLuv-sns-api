@@ -1,7 +1,8 @@
 import { IsNotEmpty, IsNumber } from 'class-validator';
 import { User } from './../../../api/users/entities/user.entity';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { CommonEntity } from './../../../common/entities/common-entity';
+import { Love } from './love.entity';
 
 @Entity()
 export class Board extends CommonEntity {
@@ -19,4 +20,7 @@ export class Board extends CommonEntity {
 
   @ManyToOne(() => User, (user) => user.board)
   user: User;
+
+  @OneToMany(() => Love, (love) => love.board)
+  love: Love;
 }

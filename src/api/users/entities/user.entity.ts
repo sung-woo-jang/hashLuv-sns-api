@@ -8,6 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { Board } from './../../../api/boards/entities/board.entity';
+import { Love } from './../../../api/boards/entities/love.entity';
 
 @Entity()
 export class User extends CommonEntity {
@@ -29,4 +30,7 @@ export class User extends CommonEntity {
 
   @OneToMany(() => Board, (board) => board.user)
   board: Board[];
+
+  @OneToMany(() => Love, (love) => love.board)
+  love: Love;
 }
