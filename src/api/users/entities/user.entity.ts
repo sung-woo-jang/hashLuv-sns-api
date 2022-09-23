@@ -28,6 +28,11 @@ export class User extends CommonEntity {
   })
   password: string;
 
+  @Column()
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
   @OneToMany(() => Board, (board) => board.user)
   board: Board[];
 
