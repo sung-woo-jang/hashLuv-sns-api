@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsNumber } from 'class-validator';
-import { Column, Entity } from 'typeorm';
+import { User } from './../../../api/users/entities/user.entity';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { CommonEntity } from './../../../common/entities/common-entity';
 
 @Entity()
@@ -15,4 +16,7 @@ export class Board extends CommonEntity {
   @IsNumber()
   @Column({ comment: '게시글 조회수 입니다.', default: 0 })
   viewCount: number;
+
+  @ManyToOne(() => User, (user) => user.board)
+  user: User;
 }
