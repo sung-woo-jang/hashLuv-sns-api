@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -18,11 +19,7 @@ export class UsersService {
 
   async signUp(createUserDto: CreateUserDto) {
     const { email, name, password } = createUserDto;
-    // 이메일 중복 검사
-    if (await this.userRepository.findOne({ where: { email } }))
-      throw new ConflictException(
-        `이미 가입한 이메일입니다. 다른 계정으로 회원가입 해주세요.`,
-      );
+    await this.existsByEmail(email);
 
     // 비밀번호 암호화
     const salt = await bcrypt.genSalt(10);
@@ -37,5 +34,19 @@ export class UsersService {
       .execute();
 
     if (!user) throw new InternalServerErrorException();
+  }
+
+  // 이메일 중복 검사
+  async existsByEmail(email: string) {
+    if (await this.userRepository.findOne({ where: { email } }))
+      throw new ConflictException(
+        `이미 가입한 이메일입니다. 다른 계정으로 회원가입 해주세요.`,
+      );
+  }
+
+  async findByEmail(email: string) {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) throw new UnauthorizedException('존재하지 않는 계정입니다.');
+    return user;
   }
 }
