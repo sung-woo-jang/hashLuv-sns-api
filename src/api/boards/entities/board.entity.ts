@@ -18,7 +18,7 @@ export class Board extends CommonEntity {
   @Column({ comment: '게시글 조회수 입니다.', default: 0 })
   viewCount: number;
 
-  @ManyToOne(() => User, (user) => user.board)
+  @ManyToOne(() => User, (user) => user.board, { cascade: true })
   user: User;
 
   @OneToMany(() => Love, (love) => love.board)

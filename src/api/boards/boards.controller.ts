@@ -1,20 +1,21 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { GetUser } from '../auth/decorator/user.decorator';
+import { JWTAuthGuard } from '../auth/guard/jwt.auth.guard';
+import { User } from '../users/entities/user.entity';
 import { BoardsService } from './boards.service';
+import { CreateBoardDto } from './dto/create-board.dto';
 
 @Controller('boards')
 export class BoardsController {
   constructor(private readonly boardsService: BoardsService) {}
 
-  /* 
-  게시글 생성
-  @UseGuard(JWTGuard)
+  // 게시글 생성
+  @UseGuards(JWTAuthGuard)
   @Post()
-  createBoard(@Body() 제목, 내용, 해시태그){
-    TODO: 사용자 정보는 req.user에서 추출
-
-    TODO: function 해시태그 구분 함수
+  // 제목, 내용, 해시태그
+  createBoard(@Body() createBoardDto: CreateBoardDto, @GetUser() user: User) {
+    return this.boardsService.createBoard(createBoardDto, user);
   }
-  */
 
   /* 
   게시글 수정
