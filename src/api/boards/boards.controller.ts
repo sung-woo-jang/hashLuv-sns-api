@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Param,
   ParseIntPipe,
   Patch,
@@ -33,20 +34,20 @@ export class BoardsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBoardDto: UpdateBoardDto,
   ) {
-    // TODO: Body내용 원본이랑 교체
     return this.boardsService.updateBoard(id, updateBoardDto);
   }
 
-  /* 
-  게시글 삭제
-  @UseGuard(JWTGuard)
+  // 게시글 삭제
+  @UseGuards(JWTAuthGuard)
   @Delete('/:id')
-  deleteBoard(@Body() 제목, 내용, 해시태그, @Param()){
-    TODO: 게시글 SoftDelete
+  deleteBoard(@Param('id', ParseIntPipe) id: number) {
+    // TODO: 게시글 SoftDelete
+    return this.boardsService.deleteBoard(id);
   }
 
+  /* 
   하나로 합치는 쪽으로 구현
-
+  
   삭제된 게시글 복구
   @UseGuard(JWTGuard)
   @Post('/:id')

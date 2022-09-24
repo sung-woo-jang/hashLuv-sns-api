@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
@@ -39,5 +39,22 @@ export class BoardsService {
       .execute();
 
     return board;
+  }
+
+  async deleteBoard(id: number) {
+    const board = await this.boardRepository.findOne({
+      where: { id },
+      withDeleted: true,
+    });
+
+    if (!board) throw new HttpException('Not found', 404);
+
+    //    TODO: 사용자 검증
+
+    // 이미 삭제된 게시물이라면 복구
+    if (board.deleteAt) await this.boardRepository.restore({ id });
+    // 아니면 softDelete
+    else await this.boardRepository.softDelete({ id });
+    // return '';
   }
 }
