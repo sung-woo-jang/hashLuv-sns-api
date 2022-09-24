@@ -55,6 +55,31 @@ export class BoardsService {
     if (board.deleteAt) await this.boardRepository.restore({ id });
     // 아니면 softDelete
     else await this.boardRepository.softDelete({ id });
-    // return '';
+  }
+
+  async getBoardDetail(id: number) {
+    const query = this.boardRepository
+      .createQueryBuilder()
+      .where('board.id = :id', { id });
+
+    // 조회수 증가
+    await query
+      .update(Board)
+      .set({ viewCount: () => 'view_count + 1' })
+      .execute();
+
+    // 게시글 상세 조회
+    const board = await query
+      .leftJoinAndSelect('board.user', 'user')
+      .select([
+        'board.title AS 제목',
+        'board.description AS 내용',
+        'board.createAt AS 작성일',
+        'board.viewCount AS 조회수',
+        'user.name AS 작성자',
+      ])
+      .getRawOne();
+
+    return board;
   }
 }
