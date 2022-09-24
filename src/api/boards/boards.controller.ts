@@ -1,9 +1,18 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { GetUser } from '../auth/decorator/user.decorator';
 import { JWTAuthGuard } from '../auth/guard/jwt.auth.guard';
 import { User } from '../users/entities/user.entity';
 import { BoardsService } from './boards.service';
 import { CreateBoardDto } from './dto/create-board.dto';
+import { UpdateBoardDto } from './dto/update.board.dto';
 
 @Controller('boards')
 export class BoardsController {
@@ -17,14 +26,16 @@ export class BoardsController {
     return this.boardsService.createBoard(createBoardDto, user);
   }
 
-  /* 
-  게시글 수정
-  @UseGuard(JWTGuard)
+  // 게시글 수정
+  @UseGuards(JWTAuthGuard)
   @Patch('/:id')
-  updateBoard(@Body() 제목, 내용, 해시태그,@Param()){
-    TODO: Body내용 원본이랑 교체
+  updateBoard(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateBoardDto: UpdateBoardDto,
+  ) {
+    // TODO: Body내용 원본이랑 교체
+    return this.boardsService.updateBoard(id, updateBoardDto);
   }
-  */
 
   /* 
   게시글 삭제
