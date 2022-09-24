@@ -1,11 +1,56 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  HttpException,
+  Injectable,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class JWTAuthGuard implements CanActivate {
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+export class JWTAuthGuard extends AuthGuard('jwt') {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+  ) {
+    super();
+  }
+
+  canActivate(context: ExecutionContext): boolean {
+    const req = context.switchToHttp().getRequest();
+
+    const authorization = req.headers.authorization;
+    if (!authorization) {
+      throw new ForbiddenException('회원가입 또는 로그인이 필요합니다.');
+    }
+    const token = authorization.split(' ')[1];
+    req.user = this.validateToken(token);
+    if (!req.user) {
+      throw new ForbiddenException('존재하지 않는 사용자입니다.');
+    }
     return true;
+  }
+
+  validateToken(token: string) {
+    const secretKey = this.configService.get<string>('JWT_SECRET_KEY')
+      ? this.configService.get<string>('JWT_SECRET_KEY')
+      : 'dev';
+
+    try {
+      const verify = this.jwtService.verify(token, { secret: secretKey });
+      return verify;
+    } catch (e) {
+      switch (e.name) {
+        case 'JsonWebTokenError':
+          throw new HttpException('유효하지 않은 토큰', 401);
+
+        case 'TokenExpiredError':
+          throw new HttpException('토큰 만료', 410);
+
+        default:
+          throw new HttpException('서버 오류', 500);
+      }
+    }
   }
 }
