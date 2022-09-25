@@ -91,8 +91,9 @@ export class BoardsService {
     // TODO: 정렬(default: 작성일 / 작성일, 좋아요 수, 조회수 택 1)
     // TODO: 오름차순, 내림차순
 
-    // TODO: 검색(제목)
-
+    // 검색(제목)
+    if (search)
+      query.orWhere('board.title Like :title', { title: `%${search}%` });
     // TODO: 필터링(해시태그)
     // TODO: 페이지
 
