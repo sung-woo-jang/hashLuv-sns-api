@@ -23,6 +23,11 @@ export class BoardsService {
       .into(Board)
       .values({ description, title, user: user.sub });
     await query.execute();
+
+    // for (let i = 1; i <= 25; i++) {
+    //   query.values({ description, title: `${i} - ${title}`, user: user.sub });
+    //   await query.execute();
+    // }
   }
 
   async updateBoard(id: number, updateBoardDto: UpdateBoardDto) {
@@ -82,8 +87,9 @@ export class BoardsService {
     return board;
   }
 
-  async getBoardList(request) {
-    const { sort, search, filter, pagination } = request.query;
+  async getBoardList(options) {
+    const { sort, search, filter, take, page } = options;
+
     const query = this.boardRepository
       .createQueryBuilder('board')
       .leftJoinAndSelect('board.user', 'user');
@@ -95,7 +101,9 @@ export class BoardsService {
     if (search)
       query.orWhere('board.title Like :title', { title: `%${search}%` });
     // TODO: 필터링(해시태그)
-    // TODO: 페이지
+
+    // 페이지(defalut:10)
+    query.limit(take).offset(take * (page - 1));
 
     const result = await query
       .select([
@@ -107,6 +115,6 @@ export class BoardsService {
       ])
       .getRawMany();
 
-    return result;
+    return { length: result.length, result };
   }
 }

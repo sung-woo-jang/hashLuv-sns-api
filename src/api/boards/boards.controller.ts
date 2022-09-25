@@ -8,9 +8,10 @@ import {
   Patch,
   Post,
   Query,
-  Request,
   UseGuards,
 } from '@nestjs/common';
+import { ValidationTakePipe } from './../../common/pipe/validationTake.pipe';
+import { ValidationPagePipe } from './../../common/pipe/validationPage.pipe';
 import { GetUser } from '../auth/decorator/user.decorator';
 import { JWTAuthGuard } from '../auth/guard/jwt.auth.guard';
 import { User } from '../users/entities/user.entity';
@@ -57,8 +58,21 @@ export class BoardsController {
 
   // Role Free
   // 게시글 리스트 가져오기
+
   @Get()
-  getBoardList(@Request() req) {
-    return this.boardsService.getBoardList(req);
+  getBoardList(
+    @Query('sort') sort,
+    @Query('search') search,
+    @Query('filter') filter,
+    @Query('take', ValidationTakePipe) take,
+    @Query('page', ValidationPagePipe) page,
+  ) {
+    return this.boardsService.getBoardList({
+      sort,
+      search,
+      filter,
+      take,
+      page,
+    });
   }
 }
