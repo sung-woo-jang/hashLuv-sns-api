@@ -7,6 +7,8 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { GetUser } from '../auth/decorator/user.decorator';
@@ -53,17 +55,10 @@ export class BoardsController {
 
   // TODO: 좋아요 기능 따로 구현
 
-  /* 
-  게시글 리스트 가져오기
-  @Query(sort: 정렬)
-  @Query(search: 제목 키워드)
-  @Query(filter: 해시태그 키워드)
-  @Query(pagination: 페이지)
+  // Role Free
+  // 게시글 리스트 가져오기
   @Get()
-  getBoardList(){
-    Role Free
-
-    return {제목, 작성자, 해시태그, 작성(년 / 월 / 일), 좋아요 수, 조회수}
+  getBoardList(@Request() req) {
+    return this.boardsService.getBoardList(req);
   }
-  */
 }
