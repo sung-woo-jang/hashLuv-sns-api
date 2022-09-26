@@ -26,11 +26,6 @@ export class BoardsService {
       .into(Board)
       .values({ description, title, user: user.sub });
     await query.execute();
-
-    // for (let i = 1; i <= 25; i++) {
-    //   query.values({ description, title: `${i} - ${title}`, user: user.sub });
-    //   await query.execute();
-    // }
   }
 
   async updateBoard(id: number, updateBoardDto: UpdateBoardDto) {
@@ -66,12 +61,12 @@ export class BoardsService {
 
   async getBoardDetail(id: number) {
     const query = this.boardRepository
-      .createQueryBuilder()
+      .createQueryBuilder('board')
       .where('board.id = :id', { id });
 
     // 조회수 증가
     await query
-      .update(Board)
+      .update()
       .set({ viewCount: () => 'view_count + 1' })
       .execute();
 
@@ -87,7 +82,12 @@ export class BoardsService {
       ])
       .getRawOne();
 
-    return board;
+    const like = await query
+      .leftJoinAndSelect('board.love', 'love')
+      .select(['love.user.id as userId'])
+      .getRawMany();
+
+    return { board, like };
   }
 
   async like(id: number, user) {
