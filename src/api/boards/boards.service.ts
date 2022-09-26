@@ -1,15 +1,18 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update.board.dto';
 import { Board } from './entities/board.entity';
+import { Love } from './entities/love.entity';
 
 @Injectable()
 export class BoardsService {
   constructor(
     @InjectRepository(Board)
     private boardRepository: Repository<Board>,
+    @InjectRepository(Love)
+    private lovesRepository: Repository<Love>,
   ) {}
 
   async createBoard(createBoardDto: CreateBoardDto, user) {
@@ -85,6 +88,36 @@ export class BoardsService {
       .getRawOne();
 
     return board;
+  }
+
+  async like(id: number, user) {
+    // 게시글을 찾는다.
+    const board = await this.boardRepository.findOne({ where: { id } });
+
+    if (!board) throw new NotFoundException('게시글 없음');
+
+    const like = await this.lovesRepository.findOne({
+      relations: { board: true },
+      where: { board: { id }, user: { id: user.sub } },
+      withDeleted: true,
+    });
+
+    const query = this.lovesRepository.createQueryBuilder('love');
+    let result;
+
+    if (!like) {
+      result = await query
+        .insert()
+        .into(Love)
+        .values({ user: user.sub, board })
+        .execute();
+    } else if (!like.deleteAt) {
+      result = await query.where({ id: like.id }).softDelete().execute();
+    } else if (like.deleteAt) {
+      result = await query.where({ id: like.id }).restore().execute();
+    }
+
+    return result;
   }
 
   async getBoardList(options) {

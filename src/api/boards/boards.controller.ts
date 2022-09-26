@@ -55,6 +55,11 @@ export class BoardsController {
   }
 
   // TODO: 좋아요 기능 따로 구현
+  @Post('/like/:id')
+  @UseGuards(JWTAuthGuard)
+  like(@Param('id', ParseIntPipe) id: number, @GetUser() user) {
+    return this.boardsService.like(id, user);
+  }
 
   // Role Free
   // 게시글 리스트 가져오기

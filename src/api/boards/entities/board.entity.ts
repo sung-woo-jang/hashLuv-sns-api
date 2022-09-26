@@ -22,5 +22,5 @@ export class Board extends CommonEntity {
   user: User;
 
   @OneToMany(() => Love, (love) => love.board)
-  love: Love;
+  love: Love[];
 }
