@@ -1,8 +1,9 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber } from 'class-validator';
 import { User } from './../../../api/users/entities/user.entity';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { CommonEntity } from './../../../common/entities/common-entity';
 import { Love } from './love.entity';
+import { HashTag } from './hashTag.entity';
 
 @Entity()
 export class Board extends CommonEntity {
@@ -23,4 +24,10 @@ export class Board extends CommonEntity {
 
   @OneToMany(() => Love, (love) => love.board)
   love: Love[];
+
+  @ManyToMany(() => HashTag, (hashtag) => hashtag.boards, {
+    onDelete: 'CASCADE',
+  })
+  @IsArray()
+  hashtags: HashTag[];
 }

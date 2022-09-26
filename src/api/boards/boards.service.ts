@@ -1,9 +1,15 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update.board.dto';
 import { Board } from './entities/board.entity';
+import { HashTag } from './entities/hashTag.entity';
 import { Love } from './entities/love.entity';
 
 @Injectable()
@@ -13,19 +19,67 @@ export class BoardsService {
     private boardRepository: Repository<Board>,
     @InjectRepository(Love)
     private lovesRepository: Repository<Love>,
+    @InjectRepository(HashTag)
+    private hashTagsRepository: Repository<HashTag>,
   ) {}
 
   async createBoard(createBoardDto: CreateBoardDto, user) {
-    const { description, title } = createBoardDto;
+    const { description, title, hashtags } = createBoardDto;
 
     // TODO: function 해시태그 구분 함수
+    try {
+      const board = await this.boardRepository.save({
+        description,
+        title,
+        user: user.sub,
+      });
+      if (hashtags.length) await this.createHashTag(board.id, hashtags);
+    } catch (err) {
+      throw new InternalServerErrorException(err.message);
+    }
+  }
 
-    const query = this.boardRepository
-      .createQueryBuilder('board')
-      .insert()
-      .into(Board)
-      .values({ description, title, user: user.sub });
-    await query.execute();
+  private async createHashTag(boardId: number, hashtags) {
+    try {
+      for (const keyword of hashtags) {
+        // 해시태그 테이블 조회
+        let hashtagId = await this.hashTagsRepository.findOne({
+          select: ['id'],
+          where: { keyword },
+        });
+        let hashtagPost: HashTag;
+
+        // 해시태그가 없을 경우에만 추가
+        if (!hashtagId) {
+          const insertResult = await this.hashTagsRepository
+            .createQueryBuilder()
+            .insert()
+            .into(HashTag)
+            .values({ keyword })
+            .execute();
+
+          hashtagId = insertResult.identifiers[0].id;
+        } else {
+          hashtagPost = await this.hashTagsRepository
+            .createQueryBuilder('hash_tag')
+            .leftJoinAndSelect('hash_tag.boards', 'boards')
+            .where('hash_tag.id = :id', { id: hashtagId.id })
+            .andWhere('boards.id =:id ', { id: boardId })
+            .getRawOne();
+        }
+        // 해시태그 id + 게시글 id 중복일 때
+        if (!hashtagPost) {
+          await this.hashTagsRepository
+            .createQueryBuilder()
+            .insert()
+            .into('hashtag_board')
+            .values({ hash_tag_id: hashtagId, board_id: boardId })
+            .execute();
+        }
+      }
+    } catch (err) {
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async updateBoard(id: number, updateBoardDto: UpdateBoardDto) {

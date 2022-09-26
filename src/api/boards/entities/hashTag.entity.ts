@@ -1,11 +1,17 @@
 import { IsNotEmpty, IsString } from 'class-validator';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
 import { CommonEntity } from './../../../common/entities/common-entity';
+import { Board } from './board.entity';
 
 @Entity()
 export class HashTag extends CommonEntity {
   @IsString()
-  @IsNotEmpty()
   @Column({})
-  hash_tag: string;
+  keyword: string;
+
+  @ManyToMany(() => Board, (board) => board.hashtags)
+  @JoinTable({
+    name: 'hashtag_board',
+  })
+  boards: Board[];
 }
