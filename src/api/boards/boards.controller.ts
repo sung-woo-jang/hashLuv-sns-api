@@ -37,15 +37,16 @@ export class BoardsController {
   updateBoard(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBoardDto: UpdateBoardDto,
+    @GetUser() user,
   ) {
-    return this.boardsService.updateBoard(id, updateBoardDto);
+    return this.boardsService.updateBoard(id, updateBoardDto, user);
   }
 
   // 게시글 삭제
   @UseGuards(JWTAuthGuard)
   @Delete('/:id')
-  deleteBoard(@Param('id', ParseIntPipe) id: number) {
-    return this.boardsService.deleteBoard(id);
+  deleteBoard(@Param('id', ParseIntPipe) id: number, @GetUser() user) {
+    return this.boardsService.deleteBoard(id, user);
   }
 
   // 게시글 상세보기

@@ -1,10 +1,12 @@
 import {
+  ForbiddenException,
   HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { userInfo } from 'os';
 import { Repository } from 'typeorm';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update.board.dto';
@@ -82,30 +84,38 @@ export class BoardsService {
     }
   }
 
-  async updateBoard(id: number, updateBoardDto: UpdateBoardDto) {
-    //    TODO: 사용자 검증
-
-    // TODO: Body내용 원본이랑 교체
-
+  async updateBoard(id: number, updateBoardDto: UpdateBoardDto, user) {
     const board = await this.boardRepository
-      .createQueryBuilder()
+      .createQueryBuilder('board')
+      .leftJoinAndSelect('board.user', 'user')
       .update(Board)
       .set({ ...updateBoardDto })
-      .where('id = :id', { id })
+      .where('board.id = :id', { id })
+      .andWhere('user.id = :id', { id: user.sub })
       .execute();
+
+    if (!board.affected)
+      throw new ForbiddenException('없는 게시물이거나 권한이 없습니다.');
 
     return board;
   }
 
-  async deleteBoard(id: number) {
+  async deleteBoard(id: number, user) {
     const board = await this.boardRepository.findOne({
       where: { id },
       withDeleted: true,
+      relations: { user: true },
     });
 
-    if (!board) throw new HttpException('Not found', 404);
+    // 게시글 검증
+    if (!board) throw new HttpException('찾을 수 없는 게시글입니다.', 404);
 
-    //    TODO: 사용자 검증
+    // 사용자 검증
+    if (board.user.id !== user.sub)
+      throw new HttpException(
+        '게시글 작성자만 게시글을 삭제할 수 있습니다.',
+        403,
+      );
 
     // 이미 삭제된 게시물이라면 복구
     if (board.deleteAt) await this.boardRepository.restore({ id });
@@ -136,12 +146,19 @@ export class BoardsService {
       ])
       .getRawOne();
 
-    const like = await query
-      .leftJoinAndSelect('board.love', 'love')
-      .select(['love.user.id as userId'])
+    const like = (
+      await query
+        .leftJoinAndSelect('board.love', 'love')
+        .select(['love.user.id as userId'])
+        .getRawMany()
+    ).filter((el) => el.userId);
+
+    const hashTag = await query
+      .leftJoinAndSelect('board.hashtags', 'hashtags')
+      .select(['hashtags.id', 'hashtags.keyword'])
       .getRawMany();
 
-    return { board, like };
+    return { board, like, hashTag };
   }
 
   async like(id: number, user) {
