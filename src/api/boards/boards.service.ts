@@ -45,6 +45,7 @@ export class BoardsService {
     try {
       for (const keyword of hashtags) {
         // 해시태그 테이블 조회
+
         let hashtagId = await this.hashTagsRepository.findOne({
           select: ['id'],
           where: { keyword },
@@ -196,29 +197,37 @@ export class BoardsService {
 
     const query = this.boardRepository
       .createQueryBuilder('board')
-      .leftJoinAndSelect('board.user', 'user');
-
+      .leftJoinAndSelect('board.user', 'user')
+      .leftJoinAndSelect('board.love', 'love')
+      .leftJoinAndSelect('board.hashtags', 'hashtags');
     // TODO: 정렬(default: 작성일 / 작성일, 좋아요 수, 조회수 택 1)
+
     // TODO: 오름차순, 내림차순
 
     // 검색(제목)
     if (search)
-      query.orWhere('board.title Like :title', { title: `%${search}%` });
-    // TODO: 필터링(해시태그)
+      query.where('board.title Like :title', { title: `%${search}%` });
+
+    // 필터링(태그)
+    if (filter)
+      query.andWhere('hashtags.keyword Like :keyword', {
+        keyword: `%${filter}%`,
+      });
 
     // 페이지(defalut:10)
     query.limit(take).offset(take * (page - 1));
 
     const result = await query
       .select([
-        'board.title AS 제목',
-        'board.description AS 내용',
-        'board.createAt AS 작성일',
-        'board.viewCount AS 조회수',
-        'user.name AS 작성자',
+        'board.title',
+        'board.description',
+        'board.createAt',
+        'board.viewCount',
       ])
-      .getRawMany();
+      .addSelect(['user.name'])
+      .addSelect(['hashtags'])
+      .getMany();
 
-    return { length: result.length, result };
+    return { result };
   }
 }

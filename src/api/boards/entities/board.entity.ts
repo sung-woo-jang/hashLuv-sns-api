@@ -1,6 +1,13 @@
 import { IsArray, IsNotEmpty, IsNumber } from 'class-validator';
 import { User } from './../../../api/users/entities/user.entity';
-import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { CommonEntity } from './../../../common/entities/common-entity';
 import { Love } from './love.entity';
 import { HashTag } from './hashTag.entity';
@@ -26,7 +33,7 @@ export class Board extends CommonEntity {
   love: Love[];
 
   @ManyToMany(() => HashTag, (hashtag) => hashtag.boards, {
-    onDelete: 'CASCADE',
+    cascade: true,
   })
   @IsArray()
   hashtags: HashTag[];

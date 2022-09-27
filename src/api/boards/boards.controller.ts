@@ -55,7 +55,7 @@ export class BoardsController {
     return this.boardsService.getBoardDetail(id);
   }
 
-  // TODO: 좋아요 기능 따로 구현
+  // 좋아요
   @Post('/like/:id')
   @UseGuards(JWTAuthGuard)
   like(@Param('id', ParseIntPipe) id: number, @GetUser() user) {
