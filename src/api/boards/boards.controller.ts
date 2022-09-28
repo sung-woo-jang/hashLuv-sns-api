@@ -10,8 +10,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ValidationTakePipe } from './../../common/pipe/validationTake.pipe';
-import { ValidationPagePipe } from './../../common/pipe/validationPage.pipe';
+import {
+  ValidationOrderPipe,
+  ValidationPagePipe,
+  ValidationSortPipe,
+  ValidationTakePipe,
+} from './../../common/pipe';
 import { GetUser } from '../auth/decorator/user.decorator';
 import { JWTAuthGuard } from '../auth/guard/jwt.auth.guard';
 import { User } from '../users/entities/user.entity';
@@ -67,7 +71,8 @@ export class BoardsController {
 
   @Get()
   getBoardList(
-    @Query('sort') sort,
+    @Query('sort', ValidationSortPipe) sort,
+    @Query('order', ValidationOrderPipe) order,
     @Query('search') search,
     @Query('filter') filter,
     @Query('take', ValidationTakePipe) take,
@@ -75,6 +80,7 @@ export class BoardsController {
   ) {
     return this.boardsService.getBoardList({
       sort,
+      order,
       search,
       filter,
       take,

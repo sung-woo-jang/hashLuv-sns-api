@@ -6,7 +6,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { userInfo } from 'os';
 import { Repository } from 'typeorm';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update.board.dto';
@@ -28,7 +27,6 @@ export class BoardsService {
   async createBoard(createBoardDto: CreateBoardDto, user) {
     const { description, title, hashtags } = createBoardDto;
 
-    // TODO: function 해시태그 구분 함수
     try {
       const board = await this.boardRepository.save({
         description,
@@ -44,7 +42,7 @@ export class BoardsService {
   private async createHashTag(boardId: number, hashtags) {
     try {
       for (const keyword of hashtags) {
-        // 해시태그 테이블 조회
+        // 태그 테이블 조회
 
         let hashtagId = await this.hashTagsRepository.findOne({
           select: ['id'],
@@ -52,7 +50,7 @@ export class BoardsService {
         });
         let hashtagPost: HashTag;
 
-        // 해시태그가 없을 경우에만 추가
+        // 태그가 없을 경우에만 추가
         if (!hashtagId) {
           const insertResult = await this.hashTagsRepository
             .createQueryBuilder()
@@ -70,7 +68,7 @@ export class BoardsService {
             .andWhere('boards.id =:id ', { id: boardId })
             .getRawOne();
         }
-        // 해시태그 id + 게시글 id 중복일 때
+        // 태그 id + 게시글 id 중복일 때
         if (!hashtagPost) {
           await this.hashTagsRepository
             .createQueryBuilder()
@@ -193,41 +191,56 @@ export class BoardsService {
   }
 
   async getBoardList(options) {
-    const { sort, search, filter, take, page } = options;
+    const { order, sort, search, filter, take, page } = options;
 
-    const query = this.boardRepository
-      .createQueryBuilder('board')
-      .leftJoinAndSelect('board.user', 'user')
-      .leftJoinAndSelect('board.love', 'love')
-      .leftJoinAndSelect('board.hashtags', 'hashtags');
-    // TODO: 정렬(default: 작성일 / 작성일, 좋아요 수, 조회수 택 1)
+    // TODO: 기준 좋아요 정렬
 
-    // TODO: 오름차순, 내림차순
+    const ids = (
+      await this.boardRepository
+        .createQueryBuilder('board')
+        .leftJoinAndSelect('board.user', 'user')
+        .leftJoinAndSelect('board.love', 'love')
+        .leftJoinAndSelect('board.hashtags', 'hashtags')
+        .where('board.title like :title', {
+          title: `%${search ? search : ''}%`,
+        })
+        .andWhere('hashtags.keyword like :keyword', {
+          keyword: `%${filter ? filter : ''}%`,
+        })
+        .limit(take)
+        .offset(take * (page - 1))
+        .orderBy(`board.${order}`, sort)
+        .select(['board.id'])
+        .getMany()
+    ).map((el) => el.id);
 
-    // 검색(제목)
-    if (search)
-      query.where('board.title Like :title', { title: `%${search}%` });
+    const result = [];
 
-    // 필터링(태그)
-    if (filter)
-      query.andWhere('hashtags.keyword Like :keyword', {
-        keyword: `%${filter}%`,
-      });
+    for (const id of ids) {
+      result.push(
+        (
+          await this.boardRepository.find({
+            relations: {
+              user: true,
+              love: true,
+              hashtags: true,
+            },
+            where: { id },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              createAt: true,
+              viewCount: true,
+              user: { name: true },
+              love: { id: true },
+              hashtags: { keyword: true },
+            },
+          })
+        )[0],
+      );
+    }
 
-    // 페이지(defalut:10)
-    query.limit(take).offset(take * (page - 1));
-
-    const result = await query
-      .select([
-        'board.title',
-        'board.description',
-        'board.createAt',
-        'board.viewCount',
-      ])
-      .addSelect(['user.name'])
-      .addSelect(['hashtags'])
-      .getMany();
-
-    return { result };
+    return result;
   }
 }
