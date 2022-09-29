@@ -94,7 +94,7 @@ export class BoardsService {
       .execute();
 
     if (!board.affected)
-      throw new ForbiddenException('없는 게시물이거나 권한이 없습니다.');
+      throw new NotFoundException('없는 게시물이거나 권한이 없습니다.');
 
     return board;
   }

@@ -46,9 +46,15 @@ export class User extends CommonEntity {
   @Column()
   name: string;
 
+  @ApiProperty({
+    type: () => Board,
+  })
   @OneToMany(() => Board, (board) => board.user)
   board: Board[];
 
+  @ApiProperty({
+    type: () => Love,
+  })
   @OneToMany(() => Love, (love) => love.board)
   love: Love;
 }
