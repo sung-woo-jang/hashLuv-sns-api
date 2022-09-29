@@ -26,8 +26,8 @@ async function bootstrap() {
     SwaggerModule.createDocument(
       app,
       new DocumentBuilder()
-        .setTitle('NestJS Typeorm Template Swagger')
-        .setDescription('Writed by Ksanbal')
+        .setTitle('HashLuv SNS Service API 명세서')
+        .setDescription('Writed by 장성우')
         .setVersion('1.0')
         .build(),
     ),

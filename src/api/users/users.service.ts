@@ -36,17 +36,17 @@ export class UsersService {
     if (!user) throw new InternalServerErrorException();
   }
 
-  // 이메일 중복 검사
-  async existsByEmail(email: string) {
-    if (await this.userRepository.findOne({ where: { email } }))
-      throw new ConflictException(
-        `이미 가입한 이메일입니다. 다른 계정으로 회원가입 해주세요.`,
-      );
-  }
-
   async findByEmail(email: string) {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) throw new UnauthorizedException('존재하지 않는 계정입니다.');
     return user;
+  }
+
+  // 이메일 중복 검사
+  private async existsByEmail(email: string) {
+    if (await this.userRepository.findOne({ where: { email } }))
+      throw new ConflictException(
+        `이미 가입한 이메일입니다. 다른 계정으로 회원가입 해주세요.`,
+      );
   }
 }
