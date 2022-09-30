@@ -100,12 +100,42 @@ export class BoardsController {
 
   // Role Free
 
-  @ApiQuery({ name: 'sort', required: false })
-  @ApiQuery({ name: 'order', required: false })
-  @ApiQuery({ name: 'search', required: false })
-  @ApiQuery({ name: 'filter', required: false })
-  @ApiQuery({ name: 'take', required: false })
-  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    description: '정렬 순서',
+    example: 'ASC',
+  })
+  @ApiQuery({
+    name: 'order',
+    required: false,
+    description: '정렬 기준',
+    example: 'title',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: '제목 검색',
+    example: '검색하고 싶은 제목',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    description: '태그 필터링',
+    example: '서울,맛집',
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    description: '가져오고 싶은 게시물의 갯수',
+    example: 5,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '보고싶은 페이지',
+    example: 2,
+  })
   @ApiOperation({ summary: '게시글 리스트 가져오기 API' })
   @Get()
   getBoardList(
